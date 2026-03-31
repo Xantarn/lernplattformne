@@ -1,0 +1,8 @@
+{% extends "admin/base_site.html" %}
+{% load static %}
+
+{% block extrahead %}
+    {{ block.super }}
+    <link rel="icon" type="image/svg+xml" href="{% static 'icons/tab-circuit.svg' %}">
+    <link rel="shortcut icon" href="{% static 'icons/tab-circuit.svg' %}">
+{% endblock %}

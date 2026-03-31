@@ -1,0 +1,43 @@
+{% extends "base.html" %}
+
+{% block title %}{{ topic.title }} - Lernplattform{% endblock %}
+
+{% block content %}
+<div class="layout-container page-pad">
+    <div class="flex flex-wrap items-center gap-3 mb-3">
+        <h1 class="page-title mb-0">{{ topic.title }}</h1>
+    </div>
+
+    <!-- Test Fortschritt und Button -->
+    {% if topic.questions.count > 0 %}
+    <div class="surface-card p-5 mb-5">
+        <h2 class="text-lg font-bold mb-3">Test für dieses Thema</h2>
+        <div class="mb-3">
+            <div class="flex items-center gap-3">
+                <span class="text-sm font-semibold">Fortschritt:</span>
+                <progress class="category-progress" value="{{ topic_progress }}" max="100"></progress>
+                <span class="text-sm muted-text">{{ topic_progress }}%</span>
+            </div>
+        </div>
+        <a href="{% url 'topic_quiz' topic.id %}" class="btn-primary">Test starten</a>
+    </div>
+    {% endif %}
+
+    <div class="surface-card p-6">
+        <div class="topic-content">{{ topic.learning_material|safe }}</div>
+    </div>
+
+    <div class="flex items-center justify-between gap-3 mt-5">
+        <a href="{% url 'lesson' topic.lesson.id %}" class="text-link inline-block">Zurueck zur Lesson</a>
+        {% if user.is_authenticated %}
+        <form method="post" action="{% url 'toggle_topic_favorite' topic.id %}">
+            {% csrf_token %}
+            <input type="hidden" name="next" value="{{ request.path }}">
+            <button type="submit" class="btn-secondary">
+                {% if is_topic_favorite %}★ Favorit entfernen{% else %}☆ Als Favorit speichern{% endif %}
+            </button>
+        </form>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,1411 @@
+<!DOCTYPE html>
+{% load static %}
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}Lernplattform{% endblock %}</title>
+    <link rel="icon" type="image/svg+xml" href="{% static 'icons/tab-circuit.svg' %}">
+    <link rel="shortcut icon" href="{% static 'icons/tab-circuit.svg' %}">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        :root {
+            --bg-start: #7ce7de;
+            --bg-end: #63ddd4;
+            --panel: #0f1114;
+            --panel-border: #2a3135;
+            --card-bg: #f8fffe;
+            --card-text: #111417;
+            --muted-text: #4f5f60;
+            --primary: #111417;
+            --primary-hover: #000000;
+            --focus-ring: rgba(17, 20, 23, 0.28);
+            --bg-accent: #9af3eb;
+            --track: #d2f7f3;
+            --progress: #00d4aa;
+            --progress-complete: #10b981;
+            --nav-trigger: #e5fef9;
+            --nav-trigger-hover: #9cfaf0;
+            --nav-link: #c8f7f1;
+            --nav-link-hover: #ffffff;
+            --sidebar-title: #9cfaf0;
+        }
+
+        html[data-theme="noir"] {
+            --bg-start: #0f172a;
+            --bg-end: #1e293b;
+            --panel: #020617;
+            --panel-border: #1f2937;
+            --card-bg: #f8fafc;
+            --card-text: #111827;
+            --muted-text: #64748b;
+            --primary: #2563eb;
+            --primary-hover: #1d4ed8;
+            --focus-ring: rgba(37, 99, 235, 0.35);
+            --bg-accent: #1e293b;
+            --track: #e2e8f0;
+            --progress: #4ade80;
+            --progress-complete: #16a34a;
+            --nav-trigger: #d8e7ff;
+            --nav-trigger-hover: #93c5fd;
+            --nav-link: #bfdbfe;
+            --nav-link-hover: #ffffff;
+            --sidebar-title: #93c5fd;
+        }
+
+        html[data-theme="apricot"] {
+            --bg-start: #ffd1b0;
+            --bg-end: #ffb388;
+            --panel: #2a1711;
+            --panel-border: #5c3528;
+            --card-bg: #fff9f5;
+            --card-text: #2a1a14;
+            --muted-text: #7e5b4d;
+            --primary: #2a1a14;
+            --primary-hover: #1a0f0b;
+            --focus-ring: rgba(42, 26, 20, 0.26);
+            --bg-accent: #ffdcbf;
+            --track: #ffe8d8;
+            --progress: #ff6b35;
+            --progress-complete: #d97706;
+            --nav-trigger: #ffe9da;
+            --nav-trigger-hover: #ffd0b0;
+            --nav-link: #ffd9c1;
+            --nav-link-hover: #ffffff;
+            --sidebar-title: #ffd0b0;
+        }
+
+        html[data-theme="apricot-dark"] {
+            --bg-start: #f3a7ab;
+            --bg-end: #e88e95;
+            --panel: #8f5560;
+            --panel-border: #b77781;
+            --card-bg: #ffe3e5;
+            --card-text: #3f232a;
+            --muted-text: #83515b;
+            --primary: #b24f5d;
+            --primary-hover: #9a4350;
+            --focus-ring: rgba(178, 79, 93, 0.3);
+            --bg-accent: #ffc6ca;
+            --track: #f8cfd3;
+            --progress: #ff6b9d;
+            --progress-complete: #fbbf24;
+            --nav-trigger: #ffedf0;
+            --nav-trigger-hover: #ffd7de;
+            --nav-link: #ffe3e8;
+            --nav-link-hover: #ffffff;
+            --sidebar-title: #ffe4e9;
+        }
+
+        body {
+            background: radial-gradient(circle at 20% 20%, var(--bg-accent), var(--bg-start) 45%), linear-gradient(145deg, var(--bg-start), var(--bg-end));
+        }
+
+        .surface-card {
+            background: var(--card-bg);
+            color: var(--card-text);
+            border-radius: 0.75rem;
+            box-shadow: 0 10px 30px rgba(2, 6, 23, 0.22);
+        }
+
+        .surface-card-soft {
+            background: rgba(255, 255, 255, 0.95);
+            color: var(--card-text);
+            border-radius: 0.75rem;
+            box-shadow: 0 8px 24px rgba(2, 6, 23, 0.16);
+        }
+
+        .btn-primary {
+            display: inline-block;
+            background: var(--primary);
+            color: #ffffff;
+            font-weight: 600;
+            padding: 0.55rem 1rem;
+            border-radius: 0.5rem;
+            transition: background-color 160ms ease;
+        }
+
+        .btn-primary:hover {
+            background: var(--primary-hover);
+        }
+
+        .btn-secondary {
+            display: inline-block;
+            background: rgba(15, 23, 42, 0.08);
+            color: #0f172a;
+            font-weight: 600;
+            padding: 0.55rem 1rem;
+            border: 1px solid rgba(15, 23, 42, 0.2);
+            border-radius: 0.5rem;
+            transition: background-color 160ms ease, border-color 160ms ease;
+        }
+
+        .btn-secondary:hover {
+            background: rgba(15, 23, 42, 0.14);
+            border-color: rgba(15, 23, 42, 0.32);
+        }
+
+        .layout-container {
+            max-width: 84rem;
+            margin: 0 auto;
+        }
+
+        .page-pad {
+            padding: 1.5rem;
+        }
+
+        .page-title {
+            font-size: 1.875rem;
+            line-height: 2.25rem;
+            font-weight: 700;
+            margin-bottom: 1.5rem;
+        }
+
+        .section-title {
+            font-size: 1.5rem;
+            line-height: 2rem;
+            font-weight: 600;
+            margin-bottom: 1rem;
+        }
+
+        .section-title-spaced {
+            margin-top: 2.5rem;
+        }
+
+        .stack-lg > * + * {
+            margin-top: 1.5rem;
+        }
+
+        .text-link {
+            color: var(--primary);
+            font-weight: 600;
+        }
+
+        .text-link:hover {
+            color: var(--primary-hover);
+        }
+
+        .muted-text {
+            color: var(--muted-text);
+        }
+
+        .nav-trigger {
+            color: var(--nav-trigger);
+            transition: color 160ms ease;
+        }
+
+        .nav-trigger:hover {
+            color: var(--nav-trigger-hover);
+        }
+
+        .nav-link {
+            color: var(--nav-link);
+            transition: color 160ms ease;
+        }
+
+        .nav-link:hover {
+            color: var(--nav-link-hover);
+        }
+
+        .nav-trigger:focus-visible,
+        .nav-link:focus-visible,
+        .btn-primary:focus-visible,
+        .btn-secondary:focus-visible,
+        .quick-btn:focus-visible,
+        .theme-toggle:focus-visible,
+        .mobile-nav-toggle:focus-visible {
+            outline: 3px solid rgba(147, 197, 253, 0.45);
+            outline-offset: 2px;
+        }
+
+        .sidebar-title {
+            color: var(--sidebar-title);
+        }
+
+        .skip-link {
+            position: fixed;
+            top: -100px;
+            left: 1rem;
+            z-index: 120;
+            background: #0f172a;
+            color: #ffffff;
+            border-radius: 0.6rem;
+            padding: 0.55rem 0.8rem;
+            font-weight: 700;
+            transition: top 120ms ease;
+        }
+
+        .skip-link:focus {
+            top: 1rem;
+        }
+
+        .sidebar-search {
+            width: 100%;
+            border: 1px solid rgba(255, 255, 255, 0.15);
+            border-radius: 0.65rem;
+            background: rgba(255, 255, 255, 0.08);
+            color: #ffffff;
+            padding: 0.5rem 0.65rem;
+            font-size: 0.88rem;
+        }
+
+        .sidebar-search::placeholder {
+            color: rgba(255, 255, 255, 0.65);
+        }
+
+        .sidebar-search:focus {
+            outline: none;
+            border-color: rgba(255, 255, 255, 0.45);
+            box-shadow: 0 0 0 3px rgba(147, 197, 253, 0.2);
+        }
+
+        .sidebar-search-btn {
+            width: 100%;
+            margin-top: 0.5rem;
+            border: 1px solid rgba(255, 255, 255, 0.24);
+            border-radius: 0.6rem;
+            color: #ffffff;
+            background: rgba(255, 255, 255, 0.12);
+            font-size: 0.82rem;
+            font-weight: 700;
+            padding: 0.42rem 0.58rem;
+            transition: background-color 160ms ease;
+        }
+
+        .sidebar-search-btn:hover {
+            background: rgba(255, 255, 255, 0.2);
+        }
+
+        .sidebar-favorite-link {
+            display: block;
+            border: 1px solid rgba(255, 255, 255, 0.12);
+            border-radius: 0.55rem;
+            padding: 0.42rem 0.58rem;
+            color: var(--nav-link);
+            font-size: 0.8rem;
+            line-height: 1.3;
+        }
+
+        .sidebar-favorite-link:hover {
+            color: #ffffff;
+            border-color: rgba(255, 255, 255, 0.25);
+            background: rgba(255, 255, 255, 0.07);
+        }
+
+        .progress-track {
+            background: var(--track);
+        }
+
+        .progress-fill {
+            background: var(--progress);
+        }
+
+        .category-progress {
+            width: 100%;
+            height: 0.4rem;
+            border: none;
+            border-radius: 999px;
+            overflow: hidden;
+            background: var(--track);
+        }
+
+        .category-progress::-webkit-progress-bar {
+            background: var(--track);
+            border-radius: 999px;
+        }
+
+        .category-progress::-webkit-progress-value {
+            background: var(--progress);
+            border-radius: 999px;
+        }
+
+        .category-progress::-moz-progress-bar {
+            background: var(--progress);
+            border-radius: 999px;
+        }
+
+        .category-progress[value="100"]::-webkit-progress-value {
+            background: var(--progress-complete);
+        }
+
+        .category-progress[value="100"]::-moz-progress-bar {
+            background: var(--progress-complete);
+        }
+
+        .auth-form p {
+            margin-bottom: 0.95rem;
+        }
+
+        .auth-form label {
+            display: block;
+            font-weight: 600;
+            margin-bottom: 0.35rem;
+            color: #111827;
+        }
+
+        .auth-form input[type="text"],
+        .auth-form input[type="password"],
+        .auth-form input[type="email"],
+        .auth-form select,
+        .auth-form textarea {
+            width: 100%;
+            border: 1px solid #d1d5db;
+            border-radius: 0.5rem;
+            padding: 0.55rem 0.75rem;
+            color: #111827;
+            background: #ffffff;
+            outline: none;
+            transition: border-color 160ms ease, box-shadow 160ms ease;
+        }
+
+        .auth-form input:focus,
+        .auth-form select:focus,
+        .auth-form textarea:focus {
+            border-color: var(--primary);
+            box-shadow: 0 0 0 3px var(--focus-ring);
+        }
+
+        .auth-form ul.errorlist {
+            margin: 0.2rem 0 0.5rem 0;
+            padding: 0.65rem 0.75rem;
+            border-radius: 0.5rem;
+            background: #fef2f2;
+            color: #b91c1c;
+            list-style: none;
+            font-size: 0.92rem;
+        }
+
+        .theme-toggle {
+            position: fixed;
+            top: 0.9rem;
+            right: 1rem;
+            z-index: 50;
+            border: 1px solid rgba(255, 255, 255, 0.22);
+            background: rgba(17, 20, 23, 0.72);
+            color: #ffffff;
+            font-size: 0.88rem;
+            font-weight: 600;
+            padding: 0.45rem 0.75rem;
+            border-radius: 999px;
+            backdrop-filter: blur(6px);
+        }
+
+        .theme-toggle:hover {
+            border-color: rgba(255, 255, 255, 0.4);
+        }
+
+        html[data-theme="noir"] .theme-toggle {
+            background: rgba(15, 23, 42, 0.72);
+        }
+
+        html[data-theme="apricot"] .theme-toggle {
+            background: rgba(74, 39, 25, 0.72);
+        }
+
+        html[data-theme="apricot-dark"] .theme-toggle {
+            background: rgba(143, 85, 96, 0.78);
+        }
+
+        .mobile-nav-toggle {
+            display: none;
+            position: fixed;
+            top: 0.9rem;
+            left: 1rem;
+            z-index: 70;
+            border: 1px solid rgba(255, 255, 255, 0.25);
+            background: rgba(17, 20, 23, 0.78);
+            color: #ffffff;
+            font-size: 0.84rem;
+            font-weight: 700;
+            padding: 0.45rem 0.72rem;
+            border-radius: 999px;
+            backdrop-filter: blur(6px);
+        }
+
+        .sidebar-backdrop {
+            display: none;
+            position: fixed;
+            inset: 0;
+            background: rgba(2, 6, 23, 0.45);
+            z-index: 55;
+        }
+
+        .mobile-sidebar-header {
+            display: none;
+            align-items: center;
+            justify-content: space-between;
+            gap: 0.75rem;
+            margin-bottom: 1rem;
+        }
+
+        .mobile-sidebar-close {
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 999px;
+            padding: 0.3rem 0.65rem;
+            color: #ffffff;
+            font-size: 0.8rem;
+            background: rgba(255, 255, 255, 0.1);
+        }
+
+        @media (prefers-reduced-motion: reduce) {
+            * {
+                animation: none !important;
+                transition: none !important;
+                scroll-behavior: auto !important;
+            }
+        }
+
+        .quick-actions {
+            position: fixed;
+            top: 3.8rem;
+            right: 1rem;
+            z-index: 50;
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+            justify-content: flex-end;
+        }
+
+        main {
+            position: relative;
+            z-index: 10;
+        }
+
+        .page-footer {
+            background: var(--panel);
+            border-top: 1px solid var(--panel-border);
+            padding: 1.5rem;
+        }
+
+        .footer-actions {
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+            justify-content: flex-end;
+            max-width: 84rem;
+            margin: 0 auto;
+        }
+
+        @media (max-width: 768px) {
+            .page-footer {
+                padding: 1rem;
+            }
+
+            .footer-actions {
+                justify-content: center;
+            }
+        }
+
+        .quick-btn {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            border: 1px solid rgba(255, 255, 255, 0.22);
+            background: rgba(17, 20, 23, 0.72);
+            color: #ffffff;
+            font-size: 0.85rem;
+            font-weight: 600;
+            line-height: 1;
+            padding: 0.5rem 0.8rem;
+            border-radius: 0.5rem;
+            backdrop-filter: blur(6px);
+            transition: border-color 160ms ease, background-color 160ms ease;
+        }
+
+        .quick-btn:hover {
+            border-color: rgba(255, 255, 255, 0.4);
+        }
+
+        .quick-logout-form {
+            margin: 0;
+        }
+
+        .quick-btn-danger {
+            background: rgba(147, 26, 52, 0.8);
+            border-color: rgba(248, 113, 113, 0.45);
+        }
+
+        .quick-btn-danger:hover {
+            background: rgba(185, 28, 28, 0.86);
+            border-color: rgba(252, 165, 165, 0.62);
+        }
+
+        html[data-theme="noir"] .quick-btn,
+        html[data-theme="apricot"] .quick-btn,
+        html[data-theme="apricot-dark"] .quick-btn {
+            background: rgba(15, 23, 42, 0.78);
+        }
+
+        html[data-theme="noir"] .quick-btn-danger,
+        html[data-theme="apricot"] .quick-btn-danger,
+        html[data-theme="apricot-dark"] .quick-btn-danger {
+            background: rgba(147, 26, 52, 0.84);
+        }
+
+        @media (max-width: 640px) {
+            .quick-actions {
+                top: 4.1rem;
+                right: 0.6rem;
+                max-width: 70vw;
+            }
+
+            .quick-btn {
+                font-size: 0.8rem;
+                padding: 0.45rem 0.7rem;
+            }
+        }
+
+        .surface-card .text-gray-600,
+        .surface-card .text-gray-700,
+        .surface-card-soft .text-gray-600,
+        .surface-card-soft .text-gray-700 {
+            color: var(--muted-text);
+        }
+
+        .topic-content {
+            line-height: 1.7;
+            tab-size: 4;
+        }
+
+        .topic-content h1,
+        .topic-content h2,
+        .topic-content h3,
+        .topic-content h4 {
+            font-weight: 700;
+            line-height: 1.25;
+            margin: 1.2rem 0 0.75rem;
+        }
+
+        .topic-content h1 {
+            font-size: 2rem;
+        }
+
+        .topic-content h2 {
+            font-size: 1.65rem;
+        }
+
+        .topic-content h3 {
+            font-size: 1.35rem;
+        }
+
+        .topic-content h4 {
+            font-size: 1.15rem;
+        }
+
+        .topic-content p,
+        .topic-content ul,
+        .topic-content ol,
+        .topic-content blockquote,
+        .topic-content pre {
+            margin-bottom: 1rem;
+        }
+
+        .topic-content p,
+        .topic-content li {
+            white-space: pre-wrap;
+        }
+
+        .topic-content hr {
+            border: 0;
+            height: 1px;
+            margin: 1.8rem 0;
+            background: linear-gradient(90deg, rgba(203, 213, 225, 0) 0%, rgba(148, 163, 184, 0.95) 50%, rgba(203, 213, 225, 0) 100%);
+        }
+
+        .topic-content img {
+            max-width: 100%;
+            height: auto;
+            border-radius: 0.5rem;
+            margin: 0.8rem 0;
+        }
+
+        .topic-content pre {
+            background: #0f172a;
+            color: #e2e8f0;
+            border-radius: 0.5rem;
+            padding: 0.9rem 1rem;
+            overflow-x: auto;
+        }
+
+        .topic-content code {
+            background: #e2e8f0;
+            color: #111827;
+            border-radius: 0.35rem;
+            padding: 0.08rem 0.35rem;
+            font-size: 0.92em;
+        }
+
+        .topic-content pre code {
+            background: transparent;
+            color: inherit;
+            padding: 0;
+        }
+
+        .topic-content .topic-panel {
+            margin: 1.5rem 0;
+            padding: 1.35rem 1.5rem;
+            border: 1px solid #dbe4ff;
+            border-left-width: 6px;
+            border-radius: 1.15rem;
+            background: linear-gradient(135deg, #f8fbff 0%, #eef2ff 100%);
+            box-shadow: 0 24px 40px -32px rgba(15, 23, 42, 0.55);
+        }
+
+        .topic-content .topic-panel__title {
+            margin-bottom: 0.65rem;
+            color: #0f172a;
+            font-size: 0.82rem;
+            font-weight: 800;
+            letter-spacing: 0.08em;
+            text-transform: uppercase;
+        }
+
+        .topic-content .topic-panel p:last-child {
+            margin-bottom: 0;
+        }
+
+        .topic-content .topic-panel--info {
+            border-color: #c7d2fe;
+            border-left-color: #6366f1;
+            background: linear-gradient(135deg, #eff3ff 0%, #e7ecff 100%);
+        }
+
+        .topic-content .topic-panel--example {
+            border-color: #bfdbfe;
+            border-left-color: #2563eb;
+            background: linear-gradient(135deg, #eff6ff 0%, #e0f2fe 100%);
+        }
+
+        .topic-content .topic-panel--accent {
+            border-color: #bbf7d0;
+            border-left-color: #16a34a;
+            background: linear-gradient(135deg, #f0fdf4 0%, #dcfce7 100%);
+        }
+
+        .topic-content .topic-panel--warning {
+            border-color: #fed7aa;
+            border-left-color: #ea580c;
+            background: linear-gradient(135deg, #fff7ed 0%, #ffedd5 100%);
+        }
+
+        .topic-content .topic-divider {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            margin: 2rem 0 1.2rem;
+            color: var(--muted-text);
+            font-size: 0.8rem;
+            font-weight: 800;
+            letter-spacing: 0.12em;
+            text-transform: uppercase;
+        }
+
+        .topic-content .topic-divider::before,
+        .topic-content .topic-divider::after {
+            content: "";
+            flex: 1;
+            height: 1px;
+            background: linear-gradient(90deg, rgba(203, 213, 225, 0) 0%, rgba(148, 163, 184, 0.95) 50%, rgba(203, 213, 225, 0) 100%);
+        }
+
+        .topic-content .topic-divider span {
+            white-space: nowrap;
+        }
+
+        .topic-content .topic-rule {
+            border: 0;
+            height: 1px;
+            margin: 1.8rem 0;
+            background: linear-gradient(90deg, rgba(203, 213, 225, 0) 0%, rgba(148, 163, 184, 0.95) 50%, rgba(203, 213, 225, 0) 100%);
+        }
+
+        .topic-content .topic-box {
+            margin: 1.25rem 0;
+            padding: 1rem 1.1rem;
+            border: 1px solid #dbe4ff;
+            border-radius: 1rem;
+            background: linear-gradient(135deg, #f8fafc 0%, #eef2ff 100%);
+            box-shadow: 0 16px 30px -28px rgba(15, 23, 42, 0.5);
+        }
+
+        .topic-content .topic-box > *:last-child {
+            margin-bottom: 0;
+        }
+
+        .topic-content .topic-box--blue {
+            background: linear-gradient(135deg, #eff6ff 0%, #dbeafe 100%);
+            border-color: #93c5fd;
+        }
+
+        .topic-content .topic-box--green {
+            background: linear-gradient(135deg, #f0fdf4 0%, #dcfce7 100%);
+            border-color: #86efac;
+        }
+
+        .topic-content .topic-box--yellow {
+            background: linear-gradient(135deg, #fefce8 0%, #fef3c7 100%);
+            border-color: #fcd34d;
+        }
+
+        .topic-content .topic-box--red {
+            background: linear-gradient(135deg, #fef2f2 0%, #fee2e2 100%);
+            border-color: #fca5a5;
+        }
+
+        .topic-content .topic-connector {
+            display: flex;
+            align-items: center;
+            gap: 0.85rem;
+            margin: 1.1rem 0;
+        }
+
+        .topic-content .topic-connector__line {
+            flex: 1;
+            min-width: 48px;
+            height: 2px;
+            overflow: hidden;
+            color: transparent;
+            background: linear-gradient(90deg, rgba(148, 163, 184, 0.25) 0%, rgba(79, 70, 229, 0.95) 100%);
+        }
+
+        .topic-content .topic-connector__label {
+            padding: 0.35rem 0.7rem;
+            border: 1px solid #c7d2fe;
+            border-radius: 999px;
+            background: #eef2ff;
+            color: #3730a3;
+            font-size: 0.83rem;
+            font-weight: 700;
+            white-space: nowrap;
+        }
+
+        .topic-content .topic-arrow-row {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.55rem;
+            margin: 1rem 0;
+            color: #334155;
+            font-weight: 700;
+        }
+
+        .topic-content .topic-arrow-row__label,
+        .topic-content .topic-arrow-stack__label {
+            padding: 0.45rem 0.75rem;
+            border-radius: 999px;
+            background: #f8fafc;
+            border: 1px solid #cbd5e1;
+        }
+
+        .topic-content .topic-arrow-row__shaft {
+            width: 42px;
+            height: 2px;
+            background: #64748b;
+            overflow: hidden;
+            color: transparent;
+        }
+
+        .topic-content .topic-arrow-row__head {
+            color: #64748b;
+            font-size: 1.25rem;
+            line-height: 1;
+        }
+
+        .topic-content .topic-arrow-stack {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 0.15rem;
+            margin: 1rem 0;
+            color: #334155;
+            font-weight: 700;
+        }
+
+        .topic-content .topic-arrow-stack__shaft {
+            width: 2px;
+            height: 34px;
+            background: #64748b;
+            overflow: hidden;
+            color: transparent;
+        }
+
+        .topic-content .topic-arrow-stack__head {
+            color: #64748b;
+            font-size: 1.35rem;
+            line-height: 1;
+        }
+
+        .topic-content .topic-callout {
+            display: grid;
+            grid-template-columns: 32px minmax(0, 1fr);
+            gap: 0.9rem;
+            align-items: start;
+            margin: 1.2rem 0;
+        }
+
+        .topic-content .topic-callout__rail {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        .topic-content .topic-callout__pin {
+            width: 16px;
+            height: 16px;
+            margin: 0.4rem auto 0;
+            border-radius: 999px;
+            background: #7c3aed;
+            box-shadow: 0 0 0 4px rgba(124, 58, 237, 0.15);
+        }
+
+        .topic-content .topic-callout__stem {
+            width: 2px;
+            height: 36px;
+            margin-top: 2px;
+            background: linear-gradient(180deg, #7c3aed 0%, rgba(124, 58, 237, 0.2) 100%);
+        }
+
+        .topic-content .topic-callout__body {
+            padding: 0.9rem 1rem;
+            border: 1px solid #ddd6fe;
+            border-radius: 1rem;
+            background: linear-gradient(135deg, #f5f3ff 0%, #ede9fe 100%);
+            color: #4c1d95;
+            box-shadow: 0 16px 30px -28px rgba(76, 29, 149, 0.45);
+        }
+
+        .topic-content .topic-compare {
+            display: grid;
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+            gap: 1rem;
+            margin: 1.4rem 0;
+        }
+
+        .topic-content .topic-compare__column {
+            border: 1px solid #dbe4ff;
+            border-radius: 1rem;
+            background: linear-gradient(135deg, #f8fafc 0%, #eff6ff 100%);
+            padding: 1rem 1.05rem;
+            box-shadow: 0 16px 30px -28px rgba(15, 23, 42, 0.38);
+        }
+
+        .topic-content .topic-compare__title {
+            margin-bottom: 0.6rem;
+            font-size: 0.85rem;
+            font-weight: 800;
+            letter-spacing: 0.06em;
+            text-transform: uppercase;
+            color: #1d4ed8;
+        }
+
+        .topic-content .topic-steps {
+            display: grid;
+            gap: 0.9rem;
+            margin: 1.4rem 0;
+        }
+
+        .topic-content .topic-step {
+            display: grid;
+            grid-template-columns: 52px minmax(0, 1fr);
+            gap: 0.9rem;
+            align-items: start;
+        }
+
+        .topic-content .topic-step__number {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 52px;
+            height: 52px;
+            border-radius: 999px;
+            background: linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%);
+            color: #ffffff;
+            font-size: 1rem;
+            font-weight: 800;
+            box-shadow: 0 14px 24px -18px rgba(29, 78, 216, 0.9);
+        }
+
+        .topic-content .topic-step__body {
+            border: 1px solid #dbe4ff;
+            border-radius: 1rem;
+            background: #ffffff;
+            padding: 0.95rem 1rem;
+        }
+
+        .topic-content .topic-step__title {
+            margin-bottom: 0.45rem;
+            font-size: 0.95rem;
+            font-weight: 800;
+            color: #0f172a;
+        }
+
+        .topic-content .topic-figure {
+            margin: 1.5rem 0;
+        }
+
+        .topic-content .topic-figure img {
+            width: 100%;
+            height: auto;
+            border-radius: 1rem;
+            border: 1px solid #dbe4ff;
+            box-shadow: 0 18px 38px -30px rgba(15, 23, 42, 0.5);
+        }
+
+        .topic-content .topic-figure figcaption {
+            margin-top: 0.7rem;
+            color: #475569;
+            font-size: 0.9rem;
+            line-height: 1.5;
+        }
+
+        .topic-content .topic-columns {
+            display: grid;
+            grid-template-columns: minmax(220px, 1fr) minmax(260px, 1.2fr);
+            gap: 1rem;
+            align-items: start;
+            margin: 1.4rem 0;
+        }
+
+        .topic-content .topic-column {
+            background: #f8fafc;
+            border: 1px solid #dbe4ff;
+            border-radius: 0.9rem;
+            padding: 0.9rem 1rem;
+        }
+
+        .topic-content .topic-column--image {
+            background: #eff6ff;
+            border-color: #bfdbfe;
+        }
+
+        .topic-content .topic-column img {
+            width: 100%;
+            height: auto;
+            border-radius: 0.65rem;
+            margin: 0;
+            display: block;
+        }
+
+        @media (max-width: 860px) {
+            .topic-content .topic-compare,
+            .topic-content .topic-columns {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        @media (max-width: 1024px) {
+            .mobile-nav-toggle {
+                display: inline-flex;
+                align-items: center;
+                justify-content: center;
+            }
+
+            .mobile-sidebar-header {
+                display: flex;
+            }
+
+            #app-sidebar {
+                position: fixed;
+                top: 0;
+                left: 0;
+                bottom: 0;
+                width: min(84vw, 320px);
+                z-index: 60;
+                transform: translateX(-102%);
+                transition: transform 180ms ease;
+                box-shadow: 0 22px 40px rgba(2, 6, 23, 0.38);
+            }
+
+            body.sidebar-open #app-sidebar {
+                transform: translateX(0);
+            }
+
+            body.sidebar-open .sidebar-backdrop {
+                display: block;
+            }
+
+            main {
+                width: 100%;
+            }
+        }
+    </style>
+</head>
+<body class="min-h-screen">
+<a href="#main-content" class="skip-link">Zum Inhalt springen</a>
+<button id="theme-toggle" class="theme-toggle" type="button">Theme: Mint</button>
+{% if user.is_authenticated %}
+<button id="mobile-nav-toggle" class="mobile-nav-toggle" type="button" aria-controls="app-sidebar" aria-expanded="false">Menue</button>
+<div id="sidebar-backdrop" class="sidebar-backdrop" hidden></div>
+<div class="quick-actions">
+    <a href="{% url 'dashboard' %}" class="quick-btn">Zum Dashboard</a>
+    <form method="post" action="{% url 'logout' %}" class="quick-logout-form">
+        {% csrf_token %}
+        <button type="submit" class="quick-btn quick-btn-danger">Ausloggen</button>
+    </form>
+</div>
+{% endif %}
+<div class="flex min-h-screen">
+    {% if user.is_authenticated %}
+    <aside id="app-sidebar" class="w-64 shrink-0 p-5 overflow-y-auto border-r" style="background: var(--panel); border-color: var(--panel-border);" aria-label="Seitennavigation">
+        <div class="mobile-sidebar-header">
+            <span class="sidebar-title font-bold">Navigation</span>
+            <button id="mobile-sidebar-close" type="button" class="mobile-sidebar-close">Schliessen</button>
+        </div>
+        <h2 class="text-2xl font-bold mb-6 sidebar-title">Kategorien</h2>
+
+        <form method="get" action="{% url 'search' %}" class="mb-5">
+            <input type="search" name="q" value="{{ search_query|default:'' }}" class="sidebar-search" placeholder="Kurs, Lesson oder Topic suchen..." aria-label="Kurs, Lesson oder Topic suchen">
+            <button type="submit" class="sidebar-search-btn">Suche starten</button>
+        </form>
+
+        {% if favorite_topics %}
+        <div class="mb-6">
+            <p class="text-xs font-bold uppercase tracking-wide mb-2 sidebar-title">Favoriten</p>
+            <ul class="space-y-2">
+                {% for favorite in favorite_topics %}
+                <li>
+                    <a href="{% url 'topic' favorite.topic.id %}" class="sidebar-favorite-link">★ {{ favorite.topic.title }}</a>
+                </li>
+                {% endfor %}
+            </ul>
+        </div>
+        {% endif %}
+
+        <ul class="space-y-4">
+            {% for category in categories %}
+            <li>
+                <button
+                    type="button"
+                    data-category-id="{{ category.id }}"
+                    class="w-full text-left font-semibold nav-trigger"
+                    aria-expanded="false"
+                    aria-controls="category-{{ category.id }}"
+                >
+                    <div class="flex items-center justify-between gap-3">
+                        <span>{{ category.name }}</span>
+                        <span class="text-xs">{{ category.progress }}%</span>
+                    </div>
+                    <progress class="category-progress mt-2" value="{{ category.progress }}" max="100"></progress>
+                    <div class="text-xs mt-1 muted-text">{{ category.completed_courses }}/{{ category.total_courses }} Kurse abgeschlossen</div>
+                </button>
+
+                <ul id="category-{{ category.id }}" class="ml-3 mt-2 hidden space-y-3 text-sm">
+                    {% for course in category.courses.all %}
+                    <li>
+                        <button
+                            type="button"
+                            data-menu-id="{{ course.id }}"
+                            class="w-full text-left nav-link font-semibold"
+                            aria-expanded="false"
+                            aria-controls="menu-{{ course.id }}"
+                        >
+                            <div class="flex items-center justify-between gap-3">
+                                <span>{{ course.title }}</span>
+                                <span class="text-xs">{{ course.progress }}%</span>
+                            </div>
+                            <progress class="category-progress mt-2" value="{{ course.progress }}" max="100"></progress>
+                        </button>
+
+                        <ul id="menu-{{ course.id }}" class="ml-3 mt-2 hidden space-y-2 text-sm">
+                            <li>
+                                <button
+                                    type="button"
+                                    data-material-id="{{ course.id }}"
+                                    class="w-full text-left nav-link"
+                                    aria-expanded="false"
+                                    aria-controls="material-{{ course.id }}"
+                                >
+                                    Lernmaterial
+                                </button>
+
+                                <ul id="material-{{ course.id }}" class="ml-3 mt-2 hidden space-y-2 text-sm">
+                                    <li>
+                                        <a href="{% url 'course' course.id %}" class="nav-link">Übersicht öffnen</a>
+                                    </li>
+                                    <li>
+                                        <a href="{% url 'flashcards' course.id %}" class="nav-link">Karteikarten</a>
+                                    </li>
+                                    {% for lesson in course.lessons.all %}
+                                    <li>
+                                        <button
+                                            type="button"
+                                            data-lesson-id="{{ lesson.id }}"
+                                            class="w-full text-left nav-link"
+                                            aria-expanded="false"
+                                            aria-controls="lesson-{{ lesson.id }}"
+                                        >
+                                            {{ lesson.title }}
+                                        </button>
+                                        <ul id="lesson-{{ lesson.id }}" class="ml-3 mt-2 hidden space-y-2 text-sm">
+                                            {% for topic in lesson.topics.all %}
+                                            <li>
+                                                <a href="{% url 'topic' topic.id %}" class="nav-link">{{ topic.title }}</a>
+                                            </li>
+                                            {% empty %}
+                                            <li class="muted-text">Keine Themen vorhanden</li>
+                                            {% endfor %}
+                                        </ul>
+                                    </li>
+                                    {% empty %}
+                                    <li class="muted-text">Keine Lessons vorhanden</li>
+                                    {% endfor %}
+                                </ul>
+                            </li>
+
+                            <li>
+                                <a href="{% url 'quiz' course.id %}" class="nav-link">Test starten</a>
+                            </li>
+                        </ul>
+                    </li>
+                    {% empty %}
+                    <li class="muted-text">Keine Kurse in dieser Kategorie</li>
+                    {% endfor %}
+                </ul>
+            </li>
+            {% empty %}
+            <li class="muted-text">Keine Kategorien vorhanden</li>
+            {% endfor %}
+
+            {% if uncategorized_courses %}
+            <li>
+                <button type="button" data-category-id="uncategorized" class="w-full text-left font-semibold nav-trigger" aria-expanded="false" aria-controls="category-uncategorized">
+                    <div class="flex items-center justify-between gap-3">
+                        <span>Ohne Kategorie</span>
+                        <span class="text-xs">{{ uncategorized_progress }}%</span>
+                    </div>
+                    <progress class="category-progress mt-2" value="{{ uncategorized_progress }}" max="100"></progress>
+                    <div class="text-xs mt-1 muted-text">{{ uncategorized_completed_courses }}/{{ uncategorized_total_courses }} Kurse abgeschlossen</div>
+                </button>
+
+                <ul id="category-uncategorized" class="ml-3 mt-2 hidden space-y-3 text-sm">
+                    {% for course in uncategorized_courses %}
+                    <li>
+                        <button
+                            type="button"
+                            data-menu-id="{{ course.id }}"
+                            class="w-full text-left nav-link font-semibold"
+                            aria-expanded="false"
+                            aria-controls="menu-{{ course.id }}"
+                        >
+                            <div class="flex items-center justify-between gap-3">
+                                <span>{{ course.title }}</span>
+                                <span class="text-xs">{{ course.progress }}%</span>
+                            </div>
+                            <progress class="category-progress mt-2" value="{{ course.progress }}" max="100"></progress>
+                        </button>
+
+                        <ul id="menu-{{ course.id }}" class="ml-3 mt-2 hidden space-y-2 text-sm">
+                            <li>
+                                <button
+                                    type="button"
+                                    data-material-id="{{ course.id }}"
+                                    class="w-full text-left nav-link"
+                                    aria-expanded="false"
+                                    aria-controls="material-{{ course.id }}"
+                                >
+                                    Lernmaterial
+                                </button>
+
+                                <ul id="material-{{ course.id }}" class="ml-3 mt-2 hidden space-y-2 text-sm">
+                                    <li>
+                                        <a href="{% url 'course' course.id %}" class="nav-link">Übersicht öffnen</a>
+                                    </li>
+                                    <li>
+                                        <a href="{% url 'flashcards' course.id %}" class="nav-link">Karteikarten</a>
+                                    </li>
+                                    {% for lesson in course.lessons.all %}
+                                    <li>
+                                        <button
+                                            type="button"
+                                            data-lesson-id="{{ lesson.id }}"
+                                            class="w-full text-left nav-link"
+                                            aria-expanded="false"
+                                            aria-controls="lesson-{{ lesson.id }}"
+                                        >
+                                            {{ lesson.title }}
+                                        </button>
+                                        <ul id="lesson-{{ lesson.id }}" class="ml-3 mt-2 hidden space-y-2 text-sm">
+                                            {% for topic in lesson.topics.all %}
+                                            <li>
+                                                <a href="{% url 'topic' topic.id %}" class="nav-link">{{ topic.title }}</a>
+                                            </li>
+                                            {% empty %}
+                                            <li class="muted-text">Keine Themen vorhanden</li>
+                                            {% endfor %}
+                                        </ul>
+                                    </li>
+                                    {% empty %}
+                                    <li class="muted-text">Keine Lessons vorhanden</li>
+                                    {% endfor %}
+                                </ul>
+                            </li>
+
+                            <li>
+                                <a href="{% url 'quiz' course.id %}" class="nav-link">Test starten</a>
+                            </li>
+                        </ul>
+                    </li>
+
+                    {% endfor %}
+                </ul>
+            </li>
+            {% endif %}
+
+            {% if not categories and not uncategorized_courses %}
+            <li class="muted-text">Keine Kurse vorhanden</li>
+            {% endif %}
+        </ul>
+    </aside>
+    {% endif %}
+
+    <main id="main-content" class="flex-1 p-6 md:p-10 overflow-y-auto" tabindex="-1">
+        {% block content %}
+        <h1 class="text-3xl font-bold mb-6">Willkommen {{ user.username }}</h1>
+        {% endblock %}
+    </main>
+</div>
+
+<script>
+    function syncAriaExpanded(id, prefix, isOpen) {
+        const button = document.querySelector('[data-' + prefix + '-id="' + id + '"]');
+        if (!button) {
+            return;
+        }
+        button.setAttribute("aria-expanded", isOpen ? "true" : "false");
+    }
+
+    function toggleMenu(id) {
+        const menu = document.getElementById("menu-" + id);
+        if (!menu) {
+            return;
+        }
+        menu.classList.toggle("hidden");
+        syncAriaExpanded(id, "menu", !menu.classList.contains("hidden"));
+    }
+
+    function toggleCategory(id) {
+        const menu = document.getElementById("category-" + id);
+        if (!menu) {
+            return;
+        }
+        menu.classList.toggle("hidden");
+        syncAriaExpanded(id, "category", !menu.classList.contains("hidden"));
+    }
+
+    function toggleMaterial(id) {
+        const menu = document.getElementById("material-" + id);
+        if (!menu) {
+            return;
+        }
+        menu.classList.toggle("hidden");
+        syncAriaExpanded(id, "material", !menu.classList.contains("hidden"));
+    }
+
+    function toggleLesson(id) {
+        const menu = document.getElementById("lesson-" + id);
+        if (!menu) {
+            return;
+        }
+        menu.classList.toggle("hidden");
+        syncAriaExpanded(id, "lesson", !menu.classList.contains("hidden"));
+    }
+
+    document.querySelectorAll("[data-menu-id]").forEach((button) => {
+        button.addEventListener("click", () => {
+            toggleMenu(button.dataset.menuId);
+        });
+    });
+
+    document.querySelectorAll("[data-category-id]").forEach((button) => {
+        button.addEventListener("click", () => {
+            toggleCategory(button.dataset.categoryId);
+        });
+    });
+
+    document.querySelectorAll("[data-material-id]").forEach((button) => {
+        button.addEventListener("click", () => {
+            toggleMaterial(button.dataset.materialId);
+        });
+    });
+
+    document.querySelectorAll("[data-lesson-id]").forEach((button) => {
+        button.addEventListener("click", () => {
+            toggleLesson(button.dataset.lessonId);
+        });
+    });
+
+    const themeToggle = document.getElementById("theme-toggle");
+    const availableThemes = ["mint", "apricot", "apricot-dark", "noir"];
+
+    function getThemeLabel(themeName) {
+        if (themeName === "apricot") {
+            return "Theme: Apricot";
+        }
+        if (themeName === "apricot-dark") {
+            return "Theme: Apricot Rose";
+        }
+        if (themeName === "noir") {
+            return "Theme: Noir";
+        }
+        return "Theme: Mint";
+    }
+
+    function applyTheme(themeName) {
+        const validTheme = availableThemes.includes(themeName) ? themeName : "mint";
+        document.documentElement.setAttribute("data-theme", validTheme);
+        localStorage.setItem("ui-theme", validTheme);
+        if (themeToggle) {
+            themeToggle.textContent = getThemeLabel(validTheme);
+        }
+    }
+
+    applyTheme(localStorage.getItem("ui-theme") || "mint");
+
+    if (themeToggle) {
+        themeToggle.addEventListener("click", () => {
+            const current = document.documentElement.getAttribute("data-theme");
+            const currentIndex = availableThemes.indexOf(current);
+            const nextTheme = availableThemes[(currentIndex + 1) % availableThemes.length];
+            applyTheme(nextTheme);
+        });
+    }
+
+    const mobileNavToggle = document.getElementById("mobile-nav-toggle");
+    const mobileSidebarClose = document.getElementById("mobile-sidebar-close");
+    const sidebarBackdrop = document.getElementById("sidebar-backdrop");
+
+    function setSidebarOpen(isOpen) {
+        document.body.classList.toggle("sidebar-open", isOpen);
+        if (sidebarBackdrop) {
+            sidebarBackdrop.hidden = !isOpen;
+        }
+        if (mobileNavToggle) {
+            mobileNavToggle.setAttribute("aria-expanded", isOpen ? "true" : "false");
+        }
+    }
+
+    if (mobileNavToggle) {
+        mobileNavToggle.addEventListener("click", () => {
+            setSidebarOpen(!document.body.classList.contains("sidebar-open"));
+        });
+    }
+
+    if (mobileSidebarClose) {
+        mobileSidebarClose.addEventListener("click", () => {
+            setSidebarOpen(false);
+        });
+    }
+
+    if (sidebarBackdrop) {
+        sidebarBackdrop.addEventListener("click", () => {
+            setSidebarOpen(false);
+        });
+    }
+
+    document.addEventListener("keydown", (event) => {
+        if (event.key === "Escape" && document.body.classList.contains("sidebar-open")) {
+            setSidebarOpen(false);
+        }
+    });
+</script>
+</body>
+</html>

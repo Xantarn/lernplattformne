@@ -1,0 +1,141 @@
+{% extends "base.html" %}
+
+{% block title %}Quiz - {{ course.title }}{% endblock %}
+
+{% block content %}
+<div class="layout-container page-pad">
+    <h1 class="page-title">Quiz: {{ course.title }}</h1>
+
+    {% if question %}
+    <div class="surface-card p-4 mb-5">
+        <div class="flex items-center justify-between gap-3 text-sm">
+            <span>Frage {{ current_number }} von {{ total_questions }}</span>
+            <span>{{ progress_percent }}%</span>
+        </div>
+        <progress class="category-progress mt-2" value="{{ progress_percent }}" max="100"></progress>
+    </div>
+
+    <form method="POST" action="{% url 'quiz' course.id %}" class="space-y-6">
+        {% csrf_token %}
+        <div class="surface-card p-5">
+            <p class="text-lg font-semibold mb-4">{{ current_number }}. {{ question.question_text }}</p>
+
+            {% if question.scenario_text %}
+            <div class="surface-card-soft p-4 mb-4 text-sm">
+                {{ question.scenario_text|linebreaksbr }}
+            </div>
+            {% endif %}
+
+            {% if question.code_snippet %}
+            <pre class="mb-4"><code>{{ question.code_snippet }}</code></pre>
+            {% endif %}
+
+            {% if question.prompt_image %}
+            <img src="{{ question.prompt_image.url }}" alt="Fragebild" class="rounded-lg mb-4 max-h-72 object-contain" />
+            {% endif %}
+
+            {% if question.question_type == "code_single" %}
+            <div class="surface-card-soft p-4 mb-4 text-sm">
+                <div><span class="font-semibold">Sprache:</span> {{ question.code_language|upper }}</div>
+                <div><span class="font-semibold">Prüfung:</span> {% if question.code_validation_mode == "syntax" %}Nur Syntax/Compiler{% else %}Ausgabe prüfen{% endif %}</div>
+                {% if question.code_test_input %}
+                <div class="mt-2"><span class="font-semibold">Test-Input:</span><pre class="mt-1"><code>{{ question.code_test_input }}</code></pre></div>
+                {% endif %}
+            </div>
+
+            <label class="block text-sm font-semibold mb-2">Dein Code</label>
+            <textarea
+                name="q_{{ question.id }}_code"
+                class="w-full border rounded p-3 font-mono text-sm"
+                rows="14"
+                required
+                spellcheck="false"
+            >{% if question.code_starter %}{{ question.code_starter }}{% elif question.code_snippet %}{{ question.code_snippet }}{% endif %}</textarea>
+
+            {% elif question.question_type == "mc_single" or question.question_type == "true_false" or question.question_type == "image_single" or question.question_type == "scenario_single" %}
+            {% for key, text in options %}
+            <label class="block mb-2 cursor-pointer">
+                <input class="mr-2" type="radio" name="q_{{ question.id }}_single" value="{{ key }}" {% if forloop.first %}required{% endif %}>
+                {{ text }}
+            </label>
+            {% endfor %}
+
+            {% elif question.question_type == "multi_select" %}
+            {% for key, text in options %}
+            <label class="block mb-2 cursor-pointer">
+                <input class="mr-2" type="checkbox" name="q_{{ question.id }}_multi" value="{{ key }}">
+                {{ text }}
+            </label>
+            {% endfor %}
+
+            {% elif question.question_type == "short_text" %}
+            <input type="text" name="q_{{ question.id }}_text" class="w-full border rounded p-2" required>
+
+            {% elif question.question_type == "matching" %}
+            <div class="space-y-3">
+                {% for pair in matching_pairs %}
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-3 items-center">
+                    <div class="font-medium">{{ pair.left }}</div>
+                    <select name="q_{{ question.id }}_match_{{ forloop.counter0 }}" class="w-full border rounded p-2" required>
+                        <option value="">Bitte waehlen</option>
+                        {% for right_item in matching_right_items %}
+                        <option value="{{ right_item }}">{{ right_item }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                {% endfor %}
+            </div>
+
+            {% elif question.question_type == "ordering" %}
+            <p class="text-sm muted-text mb-3">Gib fuer jedes Element die Position ein (1 = zuerst).</p>
+            <div class="space-y-3">
+                {% for item in ordering_items %}
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-3 items-center">
+                    <div class="font-medium">{{ item }}</div>
+                    <input type="number" min="1" max="{{ ordering_items|length }}" name="q_{{ question.id }}_order_{{ forloop.counter0 }}" class="w-full border rounded p-2" required>
+                </div>
+                {% endfor %}
+            </div>
+
+            {% elif question.question_type == "cloze" %}
+            <div class="space-y-3">
+                {% for blank in blanks %}
+                <div>
+                    <label class="block text-sm mb-1">Luecke {{ forloop.counter }}</label>
+                    <input type="text" name="q_{{ question.id }}_blank_{{ forloop.counter0 }}" class="w-full border rounded p-2" required>
+                </div>
+                {% endfor %}
+            </div>
+
+            {% elif question.question_type == "self_assessment" %}
+            <div class="space-y-3">
+                <div>
+                    <label class="block text-sm mb-1">Selbsteinschaetzung (1-5)</label>
+                    <select name="q_{{ question.id }}_rating" class="w-full border rounded p-2" required>
+                        <option value="">Bitte waehlen</option>
+                        <option value="1">1</option>
+                        <option value="2">2</option>
+                        <option value="3">3</option>
+                        <option value="4">4</option>
+                        <option value="5">5</option>
+                    </select>
+                </div>
+                <div>
+                    <label class="block text-sm mb-1">Begruendung</label>
+                    <textarea name="q_{{ question.id }}_reason" rows="4" class="w-full border rounded p-2" required></textarea>
+                </div>
+            </div>
+            {% endif %}
+        </div>
+
+        <button type="submit" class="btn-primary">
+            {% if current_number == total_questions %}Auswertung anzeigen{% else %}Nächste Frage{% endif %}
+        </button>
+    </form>
+    {% else %}
+    <div class="surface-card p-5">
+        Für diesen Kurs sind noch keine Fragen vorhanden.
+    </div>
+    {% endif %}
+</div>
+{% endblock %}

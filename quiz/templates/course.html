@@ -1,0 +1,70 @@
+{% extends "base.html" %}
+
+{% block title %}{{ course.title }} - Lernplattform{% endblock %}
+
+{% block content %}
+<div class="layout-container page-pad">
+	<h1 class="page-title">{{ course.title }}</h1>
+
+	<div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+		<a href="{% url 'quiz' course.id %}" class="block surface-card p-5 hover:shadow-xl transition">
+			<h2 class="text-xl font-bold mb-2">Test starten</h2>
+			<p class="muted-text">Starte den Kurs-Quiz und prüfe deinen Wissensstand.</p>
+		</a>
+
+		<a href="#" class="block surface-card p-5 hover:shadow-xl transition">
+			<h2 class="text-xl font-bold mb-2">Prüfung starten</h2>
+			<p class="muted-text">Beginne die Abschlussprüfung für diesen Kurs.</p>
+		</a>
+	</div>
+
+	<h2 class="section-title section-title-spaced">Lernmaterial</h2>
+	<div class="stack-lg">
+		{% for lesson in lessons %}
+		<div class="surface-card p-5">
+			<div class="flex items-start justify-between gap-4">
+				<div>
+					<h3 class="text-lg font-bold">{{ lesson.title }}</h3>
+					<p class="muted-text text-sm mt-1">{{ lesson.topics.count }} Themen</p>
+					{% if lesson.questions.count > 0 %}
+					<div class="mt-2">
+						<div class="flex items-center gap-2">
+							<span class="text-sm font-semibold">Test-Fortschritt:</span>
+							<progress class="category-progress" value="{{ lesson.quiz_progress }}" max="100"></progress>
+							<span class="text-sm muted-text">{{ lesson.quiz_progress }}%</span>
+						</div>
+					</div>
+					{% endif %}
+				</div>
+				<div class="flex flex-col gap-2">
+					<a href="{% url 'lesson' lesson.id %}" class="btn-primary">Lesson öffnen</a>
+					{% if lesson.questions.count > 0 %}
+					<a href="{% url 'lesson_quiz' lesson.id %}" class="btn-secondary">Test starten</a>
+					{% endif %}
+				</div>
+			</div>
+
+			{% if lesson.topics.all %}
+			<ul class="mt-4 grid grid-cols-1 md:grid-cols-2 gap-3">
+				{% for topic in lesson.topics.all %}
+				<li>
+					<a href="{% url 'topic' topic.id %}" class="surface-card-soft block p-4 hover:shadow-lg transition">
+						<p class="font-semibold">{{ topic.title }}</p>
+						<p class="muted-text text-sm mt-1">Thema öffnen</p>
+					</a>
+				</li>
+				{% endfor %}
+			</ul>
+			{% else %}
+			<p class="muted-text text-sm mt-4">Noch keine Themen in dieser Lesson vorhanden.</p>
+			{% endif %}
+		</div>
+		{% empty %}
+		<div class="surface-card p-5">
+			<p class="muted-text">Für diesen Kurs sind noch keine Lessons vorhanden.</p>
+		</div>
+		{% endfor %}
+	</div>
+</div>
+
+{% endblock %}

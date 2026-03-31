@@ -1,0 +1,214 @@
+{% extends "base.html" %}
+
+{% block title %}Dashboard - Lernplattform{% endblock %}
+
+{% block content %}
+<div class="layout-container page-pad">
+    <h1 class="page-title">Willkommen, {{ user.username }}! 👋</h1>
+
+    <!-- 🎮 Gamification Stats -->
+    <div class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-8">
+        <div class="surface-card p-4 text-center">
+            <p class="text-4xl font-bold text-primary">{{ user_stats.level }}</p>
+            <p class="text-sm muted-text">Level</p>
+        </div>
+        <div class="surface-card p-4 text-center">
+            <p class="text-4xl font-bold text-primary">{{ user_stats.xp }}</p>
+            <p class="text-sm muted-text">Gesamt XP</p>
+            <div class="text-xs mt-2">{{ user_stats.xp_for_next_level }} XP bis Level {{ user_stats.level|add:"1" }}</div>
+        </div>
+        <div class="surface-card p-4 text-center">
+            <p class="text-4xl font-bold text-primary">{{ user_stats.total_quizzes }}</p>
+            <p class="text-sm muted-text">Quizze absolviert</p>
+        </div>
+        <div class="surface-card p-4 text-center">
+            <p class="text-4xl font-bold text-primary">{{ user_stats.accuracy }}%</p>
+            <p class="text-sm muted-text">Genauigkeit</p>
+        </div>
+    </div>
+
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-8">
+        <div class="surface-card p-4">
+            <p class="text-sm muted-text mb-2">Heute fällige Karteikarten</p>
+            <p class="text-3xl font-bold text-primary">{{ total_due_flashcards }}</p>
+            <p class="text-xs muted-text mt-2">Perfekt für eine kurze Wiederholungsrunde.</p>
+        </div>
+        <div class="surface-card p-4">
+            <p class="text-sm muted-text mb-2">Gemerkte Favoriten</p>
+            <p class="text-3xl font-bold text-primary">{{ total_favorite_flashcards }}</p>
+            <p class="text-xs muted-text mt-2">Deine markierten Karten für schnelles Nachlernen.</p>
+        </div>
+    </div>
+
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
+        <div class="surface-card p-5">
+            <h2 class="text-lg font-bold mb-3">Weiterlernen</h2>
+            {% if resume_learning %}
+            <p class="text-sm muted-text mb-2">Zuletzt geöffnet: {{ resume_learning.last_viewed_at|date:"d.m.Y H:i" }}</p>
+            <p class="font-semibold mb-1">{{ resume_learning.current_topic.title }}</p>
+            <p class="text-sm muted-text mb-4">{{ resume_learning.current_course.title }} • {{ resume_learning.current_lesson.title }}</p>
+            <div class="flex flex-wrap gap-3">
+                <a href="{% url 'topic' resume_learning.current_topic.id %}" class="btn-primary">Beim letzten Topic weitermachen</a>
+                {% if resume_learning.next_topic %}
+                <a href="{% url 'topic' resume_learning.next_topic.id %}" class="btn-secondary">Nächstes Topic öffnen</a>
+                {% endif %}
+            </div>
+            {% else %}
+            <p class="muted-text text-sm">Noch kein Verlauf vorhanden. Öffne ein Topic, dann kannst du hier direkt weitermachen.</p>
+            {% endif %}
+        </div>
+
+        <div class="surface-card p-5">
+            <h2 class="text-lg font-bold mb-3">Zuletzt angesehen</h2>
+            {% if recent_topic_states %}
+            <ul class="space-y-2">
+                {% for state in recent_topic_states %}
+                <li class="rounded border border-white/10 p-3">
+                    <a href="{% url 'topic' state.topic.id %}" class="font-semibold text-link">{{ state.topic.title }}</a>
+                    <p class="text-xs muted-text mt-1">{{ state.topic.lesson.course.title }} • {{ state.topic.lesson.title }}</p>
+                    <p class="text-xs muted-text mt-1">Zuletzt: {{ state.last_viewed_at|date:"d.m.Y H:i" }} • Besuche: {{ state.visit_count }}</p>
+                </li>
+                {% endfor %}
+            </ul>
+            {% else %}
+            <p class="muted-text text-sm">Noch keine zuletzt angesehenen Topics vorhanden.</p>
+            {% endif %}
+        </div>
+    </div>
+
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
+        <div class="surface-card p-5">
+            <h2 class="text-lg font-bold mb-4">Trefferquote je Lernbereich</h2>
+            {% if learning_area_accuracy %}
+            <div class="space-y-3">
+                {% for area in learning_area_accuracy %}
+                <div>
+                    <div class="flex items-center justify-between text-sm mb-1">
+                        <span class="font-semibold">{{ area.name }}</span>
+                        <span class="muted-text">{{ area.accuracy }}% ({{ area.correct }}/{{ area.total }})</span>
+                    </div>
+                    <div class="w-full progress-track rounded-full h-3">
+                        <div class="h-3 rounded-full progress-fill" data-progress="{{ area.accuracy }}"></div>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+            {% else %}
+            <p class="muted-text text-sm">Noch zu wenig Daten. Starte ein paar Quizze, dann wird hier die Auswertung sichtbar.</p>
+            {% endif %}
+        </div>
+
+        <div class="surface-card p-5">
+            <h2 class="text-lg font-bold mb-4">Behaltensrate über Zeit</h2>
+            <div class="space-y-3">
+                {% for item in retention_stats %}
+                <div class="rounded border border-white/10 p-3">
+                    <div class="flex items-center justify-between mb-2">
+                        <span class="font-semibold">Nach {{ item.days }} {% if item.days == 1 %}Tag{% else %}Tagen{% endif %}</span>
+                        <span class="text-sm muted-text">{{ item.rate }}%</span>
+                    </div>
+                    <div class="w-full progress-track rounded-full h-3 mb-2">
+                        <div class="h-3 rounded-full progress-fill" data-progress="{{ item.rate }}"></div>
+                    </div>
+                    <p class="text-xs muted-text">{{ item.remembered }} von {{ item.total }} passenden Wiederholungen korrekt erinnert</p>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+
+    <!-- 🏅 Badges -->
+    {% if user_stats.badges %}
+    <div class="surface-card p-4 mb-8">
+        <h2 class="text-lg font-bold mb-3">🏅 Verdiente Badges</h2>
+        <div class="flex flex-wrap gap-3">
+            {% for user_badge in user_stats.badges %}
+            <div class="flex items-center gap-2 bg-gray-100 rounded p-2">
+                <span class="text-2xl">{{ user_badge.badge.icon_emoji }}</span>
+                <div>
+                    <p class="font-semibold text-sm">{{ user_badge.badge.name }}</p>
+                    <p class="text-xs muted-text">{{ user_badge.earned_at|date:"d.m.Y" }}</p>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+    {% endif %}
+
+    <h2 class="section-title">Deine Kurse</h2>
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        {% for item in courses_with_progress %}
+        <div class="surface-card p-4 hover:shadow-xl transition">
+            <h3 class="text-xl font-bold mb-2">{{ item.course.title }}</h3>
+            <p class="muted-text mb-4">{{ item.course.description }}</p>
+
+            <div class="mb-2">
+                <span class="text-sm muted-text">Fortschritt: {{ item.progress }}%</span>
+                <div class="w-full progress-track rounded-full h-4 mt-1">
+                    <div class="h-4 rounded-full progress-fill" data-progress="{{ item.progress }}"></div>
+                </div>
+            </div>
+
+            <div class="grid grid-cols-2 gap-3 text-sm mb-4">
+                <div class="rounded border border-white/10 p-3">
+                    <p class="muted-text">Lektionen</p>
+                    <p class="font-semibold">{{ item.lesson_count }}</p>
+                </div>
+                <div class="rounded border border-white/10 p-3">
+                    <p class="muted-text">Themen</p>
+                    <p class="font-semibold">{{ item.topic_count }}</p>
+                </div>
+                <div class="rounded border border-white/10 p-3">
+                    <p class="muted-text">Karteikarten</p>
+                    <p class="font-semibold">{{ item.flashcards_count }}</p>
+                </div>
+                <div class="rounded border border-white/10 p-3">
+                    <p class="muted-text">Bester Score</p>
+                    <p class="font-semibold">{% if item.best_score is not None %}{{ item.best_score_percent }}%{% else %}-{% endif %}</p>
+                </div>
+            </div>
+
+            <div class="mb-4 flex flex-wrap gap-2 text-xs">
+                <span class="rounded-full bg-blue-100 px-3 py-1 text-blue-700">{{ item.due_flashcards }} fällig</span>
+                <span class="rounded-full bg-amber-100 px-3 py-1 text-amber-700">{{ item.favorite_flashcards }} Favoriten</span>
+                {% if item.last_activity %}
+                <span class="rounded-full bg-emerald-100 px-3 py-1 text-emerald-700">Aktiv am {{ item.last_activity|date:"d.m.Y" }}</span>
+                {% endif %}
+            </div>
+
+            <div class="mb-4 rounded border border-white/10 p-3 text-sm">
+                <p class="muted-text">Nächster Schritt</p>
+                <p class="font-semibold">{{ item.next_step }}</p>
+            </div>
+
+            <div class="flex flex-wrap gap-3 mt-3">
+                <a href="{% url 'quiz' item.course.id %}" class="btn-primary">Quiz starten</a>
+                <a href="{% url 'flashcards' item.course.id %}?filter=due" class="btn-secondary">Karteikarten</a>
+            </div>
+        </div>
+        {% empty %}
+        <p>Keine Kurse vorhanden</p>
+        {% endfor %}
+    </div>
+
+    <h2 class="section-title section-title-spaced">Deine Ergebnisse</h2>
+    <ul class="surface-card p-4">
+        {% for result in results %}
+        <li class="border-b border-gray-200 py-2">
+            <span class="font-semibold">{{ result.course.title }}:</span>
+            {{ result.score }} Punkte - {{ result.date|date:"d.m.Y H:i" }}
+        </li>
+        {% empty %}
+        <li>Noch keine Ergebnisse</li>
+        {% endfor %}
+    </ul>
+</div>
+
+<script>
+    document.querySelectorAll(".progress-fill").forEach((bar) => {
+        const value = Number(bar.dataset.progress || 0);
+        const width = Math.max(0, Math.min(100, value));
+        bar.style.width = width + "%";
+    });
+</script>
+{% endblock %}

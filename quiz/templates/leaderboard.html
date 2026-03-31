@@ -1,0 +1,58 @@
+{% extends "base.html" %}
+
+{% block title %}Leaderboard - Lernplattform{% endblock %}
+
+{% block content %}
+<div class="layout-container page-pad">
+    <h1 class="page-title">🏆 Leaderboard</h1>
+
+    {% if user_position %}
+    <div class="surface-card p-4 mb-6">
+        <p class="text-lg font-semibold">Deine Position:</p>
+        <p class="text-3xl font-bold text-primary">🎯 Platz #{{ user_position }}</p>
+    </div>
+    {% endif %}
+
+    <div class="surface-card overflow-hidden">
+        <table class="w-full">
+            <thead class="background-muted" style="background: var(--track);">
+                <tr>
+                    <th class="p-3 text-left">Rang</th>
+                    <th class="p-3 text-left">Benutzer</th>
+                    <th class="p-3 text-right">Level</th>
+                    <th class="p-3 text-right">XP</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for profile in leaderboard %}
+                <tr {% if profile.user == user %}style="background: rgba(16, 185, 129, 0.1); font-weight: bold;"{% else %}style="border-bottom: 1px solid var(--track);"{% endif %}>
+                    <td class="p-3">
+                        {% if forloop.counter == 1 %}🥇{% elif forloop.counter == 2 %}🥈{% elif forloop.counter == 3 %}🥉{% else %}{{ forloop.counter }}{% endif %}
+                    </td>
+                    <td class="p-3">
+                        {{ profile.user.username }}
+                        {% if profile.user == user %}<span class="text-xs muted-text">(Du)</span>{% endif %}
+                    </td>
+                    <td class="p-3 text-right">
+                        <span class="bg-primary text-white px-2 py-1 rounded text-sm">Lvl {{ profile.get_level }}</span>
+                    </td>
+                    <td class="p-3 text-right font-semibold">
+                        {{ profile.total_xp }} 💫
+                    </td>
+                </tr>
+                {% empty %}
+                <tr>
+                    <td colspan="4" class="p-4 text-center muted-text">
+                        Noch keine Spieler auf dem Leaderboard
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+
+    <div class="text-xs muted-text mt-4">
+        💡 Hinweis: XP verdienst du durch das Absolvieren von Quizzen. Höhere Schwierigkeitsstufen geben mehr XP!
+    </div>
+</div>
+{% endblock %}

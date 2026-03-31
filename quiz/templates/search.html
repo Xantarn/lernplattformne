@@ -1,0 +1,76 @@
+{% extends "base.html" %}
+
+{% block title %}Suche - Lernplattform{% endblock %}
+
+{% block content %}
+<div class="layout-container page-pad">
+    <h1 class="page-title">Suche</h1>
+
+    <div class="surface-card p-5 mb-6">
+        <form method="get" action="{% url 'search' %}" class="grid grid-cols-1 md:grid-cols-[1fr_auto] gap-3">
+            <input
+                type="search"
+                name="q"
+                value="{{ search_query }}"
+                placeholder="Kurs, Lesson oder Topic eingeben..."
+                class="auth-form"
+                style="border:1px solid #cbd5e1;border-radius:0.6rem;padding:0.6rem 0.75rem;"
+            >
+            <button type="submit" class="btn-primary">Suchen</button>
+        </form>
+        {% if search_query %}
+        <p class="text-sm muted-text mt-3">{{ result_count }} Treffer für "{{ search_query }}"</p>
+        {% else %}
+        <p class="text-sm muted-text mt-3">Suche nach Kursen, Lessons und Topics.</p>
+        {% endif %}
+    </div>
+
+    {% if search_query %}
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-5">
+        <div class="surface-card p-5">
+            <h2 class="text-lg font-bold mb-3">Kurse ({{ courses_found|length }})</h2>
+            <ul class="space-y-2">
+                {% for course in courses_found %}
+                <li>
+                    <a href="{% url 'course' course.id %}" class="text-link font-semibold">{{ course.title }}</a>
+                    {% if course.category %}
+                    <p class="text-xs muted-text">{{ course.category.name }}</p>
+                    {% endif %}
+                </li>
+                {% empty %}
+                <li class="muted-text text-sm">Keine Kurse gefunden.</li>
+                {% endfor %}
+            </ul>
+        </div>
+
+        <div class="surface-card p-5">
+            <h2 class="text-lg font-bold mb-3">Lessons ({{ lessons_found|length }})</h2>
+            <ul class="space-y-2">
+                {% for lesson in lessons_found %}
+                <li>
+                    <a href="{% url 'lesson' lesson.id %}" class="text-link font-semibold">{{ lesson.title }}</a>
+                    <p class="text-xs muted-text">{{ lesson.course.title }}</p>
+                </li>
+                {% empty %}
+                <li class="muted-text text-sm">Keine Lessons gefunden.</li>
+                {% endfor %}
+            </ul>
+        </div>
+
+        <div class="surface-card p-5">
+            <h2 class="text-lg font-bold mb-3">Topics ({{ topics_found|length }})</h2>
+            <ul class="space-y-2">
+                {% for topic in topics_found %}
+                <li class="rounded border border-white/10 p-2">
+                    <a href="{% url 'topic' topic.id %}" class="text-link font-semibold">{{ topic.title }}</a>
+                    <p class="text-xs muted-text">{{ topic.lesson.course.title }} • {{ topic.lesson.title }}</p>
+                </li>
+                {% empty %}
+                <li class="muted-text text-sm">Keine Topics gefunden.</li>
+                {% endfor %}
+            </ul>
+        </div>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}

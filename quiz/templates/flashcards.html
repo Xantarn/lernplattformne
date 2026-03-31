@@ -1,0 +1,409 @@
+{% extends "base.html" %}
+
+{% block title %}Karteikarten - {{ course.title }}{% endblock %}
+
+{% block content %}
+<div class="layout-container page-pad">
+    <div class="mb-6 flex flex-wrap items-center justify-between gap-3">
+        <h1 class="page-title mb-0">Karteikarten: {{ course.title }}</h1>
+    </div>
+
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+        <div class="surface-card p-4">
+            <p class="text-sm muted-text">Heute fällig</p>
+            <p class="text-3xl font-bold text-primary">{{ due_count }}</p>
+        </div>
+        <div class="surface-card p-4">
+            <p class="text-sm muted-text">Neue Karten</p>
+            <p class="text-3xl font-bold text-primary">{{ new_count }}</p>
+        </div>
+        <div class="surface-card p-4">
+            <p class="text-sm muted-text">Favoriten</p>
+            <p class="text-3xl font-bold text-primary">{{ favorites_count }}</p>
+        </div>
+    </div>
+
+    <div class="mb-6 flex flex-wrap gap-2 text-sm">
+        <a href="{% url 'flashcards' course.id %}?filter=all" class="rounded-full px-4 py-2 {% if selected_filter == 'all' %}bg-primary text-white{% else %}surface-card{% endif %}">Alle ({{ all_flashcards_count }})</a>
+        <a href="{% url 'flashcards' course.id %}?filter=due" class="rounded-full px-4 py-2 {% if selected_filter == 'due' %}bg-primary text-white{% else %}surface-card{% endif %}">Fällig ({{ due_count }})</a>
+        <a href="{% url 'flashcards' course.id %}?filter=new" class="rounded-full px-4 py-2 {% if selected_filter == 'new' %}bg-primary text-white{% else %}surface-card{% endif %}">Neu ({{ new_count }})</a>
+        <a href="{% url 'flashcards' course.id %}?filter=favorites" class="rounded-full px-4 py-2 {% if selected_filter == 'favorites' %}bg-primary text-white{% else %}surface-card{% endif %}">Favoriten ({{ favorites_count }})</a>
+    </div>
+
+    {% if flashcards %}
+    <div class="surface-card p-6">
+        <div id="flashcard-container" class="min-h-64">
+            <div class="text-center">
+                <div class="mb-2 text-sm muted-text">Karte <span id="current-index">1</span> von <span id="total-cards">{{ flashcards|length }}</span></div>
+                <div class="mb-4 flex flex-wrap items-center justify-center gap-3 text-sm">
+                    <span id="current-next-review" class="rounded-full bg-blue-100 px-3 py-1 text-blue-700">Neu</span>
+                    <button type="button" id="favorite-toggle" class="rounded-full border px-3 py-1 font-semibold">☆ Favorit</button>
+                </div>
+
+                <div class="progress-track mb-4 h-2 rounded-full">
+                    <div id="progress-bar" class="progress-fill h-2 rounded-full" style="width: 0%"></div>
+                </div>
+
+                <div id="flashcard-display" class="mb-6 min-h-64 rounded-lg border-2 p-8"></div>
+
+                <div id="rating-buttons" class="hidden justify-center gap-3 mb-4">
+                    <button type="button" data-known="true" class="rounded bg-green-600 px-6 py-2 font-semibold text-white hover:bg-green-700">Gewusst</button>
+                    <button type="button" data-known="false" class="rounded bg-orange-500 px-6 py-2 font-semibold text-white hover:bg-orange-600">Nicht gewusst</button>
+                </div>
+
+                <div class="flex justify-center gap-3 mb-4">
+                    <button type="button" id="previous-card" class="btn-primary">Zurück</button>
+                    <button type="button" id="flip-button" class="btn-primary">Umdrehen</button>
+                    <button type="button" id="next-card" class="btn-primary">Weiter</button>
+                </div>
+
+                <button type="button" id="shuffle-cards" class="text-sm font-semibold text-primary">Durchmischen</button>
+            </div>
+        </div>
+    </div>
+
+    <div class="mt-8">
+        <h2 class="section-title">Alle Karteikarten</h2>
+        <div class="space-y-2">
+            {% for card in flashcards %}
+            <div class="surface-card p-4 transition-colors border-l-4 border-gray-200" data-card-index="{{ forloop.counter0 }}">
+                <div class="mb-3 flex items-start justify-between gap-3">
+                    <button type="button" class="text-left font-semibold hover:text-primary" data-jump-index="{{ forloop.counter0 }}">
+                        {{ card.front }}
+                        {% if card.has_multiple_choice %}<span class="ml-2 rounded bg-purple-100 px-2 py-1 text-xs text-purple-700">MC</span>{% endif %}
+                    </button>
+                    <div class="flex gap-2">
+                        <button type="button" class="rounded border px-3 py-1 text-sm font-semibold hover:border-primary" data-favorite-id="{{ card.id }}">{% if card.is_favorite %}★{% else %}☆{% endif %}</button>
+                        <a href="{% url 'edit_flashcard' card.id %}" class="rounded bg-blue-600 px-3 py-1 text-sm font-semibold text-white hover:bg-blue-700">Bearbeiten</a>
+                        <a href="{% url 'delete_flashcard' card.id %}" class="rounded bg-red-600 px-3 py-1 text-sm font-semibold text-white hover:bg-red-700">Löschen</a>
+                    </div>
+                </div>
+
+                <div class="mb-3 flex flex-wrap gap-2 text-xs">
+                    <span class="rounded-full bg-slate-100 px-3 py-1 text-slate-700">{{ card.next_review_label }}</span>
+                    {% if card.is_favorite %}<span class="rounded-full bg-amber-100 px-3 py-1 text-amber-700">Favorit</span>{% endif %}
+                    {% if card.is_due %}<span class="rounded-full bg-emerald-100 px-3 py-1 text-emerald-700">Fällig</span>{% endif %}
+                </div>
+
+                <div class="rounded bg-blue-50 p-3 text-left">
+                    {% if card.has_multiple_choice %}
+                    <div class="mb-3">
+                        <strong>Antwortmöglichkeiten:</strong>
+                        <ul class="ml-2 mt-1 list-inside list-disc">
+                            {% for option in card.options.all %}
+                            <li>{{ option.text }}{% if option.is_correct %} <span class="text-green-600">✓</span>{% endif %}</li>
+                            {% endfor %}
+                        </ul>
+                    </div>
+                    <div class="border-t pt-2 mt-2">
+                        <strong>Erklärung:</strong>
+                        <p>{{ card.back }}</p>
+                    </div>
+                    {% else %}
+                    {{ card.back }}
+                    {% endif %}
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+    {% else %}
+    <div class="surface-card p-6">
+        <p class="text-center muted-text">Für den aktuellen Filter sind keine Karteikarten vorhanden.</p>
+    </div>
+    {% endif %}
+
+    <div class="flex flex-wrap gap-3 mt-6">
+        <a href="{% url 'course' course.id %}" class="btn-primary">Zurück zum Kurs</a>
+        <a href="{% url 'create_flashcard' course.id %}" class="btn-primary">Neue Karteikarte</a>
+    </div>
+</div>
+
+{{ flashcards_payload|json_script:"flashcards-data" }}
+<input type="hidden" id="csrf-token" value="{{ csrf_token }}">
+
+<script>
+    const cards = JSON.parse(document.getElementById("flashcards-data").textContent || "[]").map((card) => ({
+        ...card,
+        status: null,
+    }));
+
+    let currentCardIndex = 0;
+    let isFlipped = false;
+
+    const flashcardDisplay = document.getElementById("flashcard-display");
+    const progressBar = document.getElementById("progress-bar");
+    const currentIndex = document.getElementById("current-index");
+    const ratingButtons = document.getElementById("rating-buttons");
+    const flipButton = document.getElementById("flip-button");
+    const favoriteToggle = document.getElementById("favorite-toggle");
+    const nextReviewBadge = document.getElementById("current-next-review");
+    const csrfToken = document.getElementById("csrf-token")?.value;
+
+    async function postJson(url, payload) {
+        const response = await fetch(url, {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json",
+                "X-CSRFToken": csrfToken,
+            },
+            body: JSON.stringify(payload || {}),
+        });
+        return response.json();
+    }
+
+    async function syncFavorite(cardId) {
+        const result = await postJson(`/flashcards/${cardId}/favorite/`, {});
+        if (!result.success) {
+            return;
+        }
+
+        const card = cards.find((item) => item.id === cardId);
+        if (card) {
+            card.is_favorite = result.is_favorite;
+        }
+        updateCardListDisplay();
+        if (cards[currentCardIndex] && cards[currentCardIndex].id === cardId) {
+            updateCurrentCardMeta();
+        }
+    }
+
+    async function persistReview(cardId, known) {
+        const result = await postJson(`/flashcards/${cardId}/review/`, { known });
+        if (!result.success) {
+            return;
+        }
+        const card = cards.find((item) => item.id === cardId);
+        if (card) {
+            card.next_review_label = result.next_review_label;
+        }
+    }
+
+    function updateCurrentCardMeta() {
+        if (!cards.length || !favoriteToggle || !nextReviewBadge) {
+            return;
+        }
+        const card = cards[currentCardIndex];
+        favoriteToggle.textContent = card.is_favorite ? "★ Favorit" : "☆ Favorit";
+        favoriteToggle.classList.toggle("border-amber-400", card.is_favorite);
+        favoriteToggle.classList.toggle("text-amber-600", card.is_favorite);
+        nextReviewBadge.textContent = card.next_review_label || "Neu";
+    }
+
+    function updateCardListDisplay() {
+        document.querySelectorAll("[data-card-index]").forEach((element) => {
+            const index = Number(element.getAttribute("data-card-index"));
+            const card = cards[index];
+            const status = card?.status;
+            element.classList.remove("border-green-500", "bg-green-50", "border-orange-500", "bg-orange-50", "border-gray-200");
+
+            if (status === "known") {
+                element.classList.add("border-green-500", "bg-green-50");
+            } else if (status === "unknown") {
+                element.classList.add("border-orange-500", "bg-orange-50");
+            } else {
+                element.classList.add("border-gray-200");
+            }
+
+            const favoriteButton = element.querySelector("[data-favorite-id]");
+            if (favoriteButton && card) {
+                favoriteButton.textContent = card.is_favorite ? "★" : "☆";
+            }
+        });
+    }
+
+    function showSummary() {
+        const known = cards.filter((card) => card.status === "known").length;
+        const unknown = cards.filter((card) => card.status === "unknown").length;
+        const percentage = cards.length ? Math.round((known / cards.length) * 100) : 0;
+
+        document.getElementById("flashcard-container").innerHTML = `
+            <div class="text-center">
+                <h2 class="mb-6 text-3xl font-bold">Zusammenfassung</h2>
+                <div class="mb-8 grid grid-cols-1 gap-4 md:grid-cols-3">
+                    <div class="surface-card p-6"><div class="text-3xl font-bold text-green-600">${known}</div><div class="text-sm muted-text">Gewusst</div></div>
+                    <div class="surface-card p-6"><div class="text-3xl font-bold text-orange-500">${unknown}</div><div class="text-sm muted-text">Nicht gewusst</div></div>
+                    <div class="surface-card p-6"><div class="text-3xl font-bold text-blue-500">${percentage}%</div><div class="text-sm muted-text">Erfolgsrate</div></div>
+                </div>
+                <button type="button" class="btn-primary" onclick="window.location.reload()">Nochmal versuchen</button>
+            </div>
+        `;
+    }
+
+    function renderNormalCard(card) {
+        const content = isFlipped ? card.back : card.front;
+        flashcardDisplay.innerHTML = `
+            <button type="button" id="flashcard-button" class="flex h-full min-h-64 w-full items-center justify-center rounded-lg border-2 border-blue-200 bg-gradient-to-br from-blue-50 to-blue-100 p-8 text-center text-2xl font-semibold text-gray-800 hover:shadow-lg">
+                ${content}
+            </button>
+        `;
+        document.getElementById("flashcard-button").addEventListener("click", flipCard);
+        flipButton.style.display = "inline-block";
+        ratingButtons.classList.toggle("hidden", !isFlipped);
+        ratingButtons.classList.toggle("flex", isFlipped);
+    }
+
+    function renderMultipleChoiceCard(card) {
+        flashcardDisplay.innerHTML = `
+            <div class="rounded-lg border-2 border-purple-200 bg-gradient-to-br from-purple-50 to-purple-100 p-6 text-left">
+                <h3 class="mb-6 text-2xl font-semibold text-gray-800">${card.front}</h3>
+                <div class="space-y-3">
+                    ${card.options.map((option, index) => `
+                        <button type="button" class="mc-option w-full rounded border-2 border-gray-300 bg-white p-4 text-left hover:border-primary" data-option-index="${index}">
+                            <span class="font-medium">${String.fromCharCode(65 + index)}.</span> ${option.text}
+                        </button>
+                    `).join("")}
+                </div>
+            </div>
+        `;
+
+        flashcardDisplay.querySelectorAll(".mc-option").forEach((button) => {
+            button.addEventListener("click", () => submitMCAnswer(Number(button.getAttribute("data-option-index"))));
+        });
+
+        flipButton.style.display = "none";
+        ratingButtons.classList.add("hidden");
+        ratingButtons.classList.remove("flex");
+    }
+
+    function displayCard() {
+        if (!cards.length) {
+            return;
+        }
+
+        const card = cards[currentCardIndex];
+        currentIndex.textContent = String(currentCardIndex + 1);
+        progressBar.style.width = `${((currentCardIndex + 1) / cards.length) * 100}%`;
+
+        if (card.has_mc && card.options.length) {
+            renderMultipleChoiceCard(card);
+        } else {
+            renderNormalCard(card);
+        }
+
+        updateCurrentCardMeta();
+        updateCardListDisplay();
+    }
+
+    function flipCard() {
+        isFlipped = !isFlipped;
+        flipButton.textContent = isFlipped ? "Zurück" : "Umdrehen";
+        displayCard();
+    }
+
+    async function markCard(known) {
+        cards[currentCardIndex].status = known ? "known" : "unknown";
+        await persistReview(cards[currentCardIndex].id, known);
+        ratingButtons.classList.add("hidden");
+        ratingButtons.classList.remove("flex");
+
+        if (currentCardIndex < cards.length - 1) {
+            currentCardIndex += 1;
+            isFlipped = false;
+            flipButton.textContent = "Umdrehen";
+            displayCard();
+        } else {
+            showSummary();
+        }
+    }
+
+    async function submitMCAnswer(selectedIndex) {
+        const card = cards[currentCardIndex];
+        const isCorrect = Boolean(card.options[selectedIndex]?.is_correct);
+        card.status = isCorrect ? "known" : "unknown";
+        await persistReview(card.id, isCorrect);
+
+        flashcardDisplay.innerHTML = `
+            <div class="rounded-lg border p-6 ${isCorrect ? "border-green-400 bg-green-50" : "border-orange-400 bg-orange-50"}">
+                <p class="font-semibold ${isCorrect ? "text-green-700" : "text-orange-700"}">${isCorrect ? "Richtig" : "Nicht richtig"}</p>
+                <p class="mt-3 text-sm ${isCorrect ? "text-green-700" : "text-orange-700"}">${card.back}</p>
+            </div>
+        `;
+
+        updateCardListDisplay();
+        flipButton.style.display = "none";
+        ratingButtons.classList.add("hidden");
+        ratingButtons.classList.remove("flex");
+        updateCurrentCardMeta();
+    }
+
+    function previousCard() {
+        if (currentCardIndex > 0) {
+            currentCardIndex -= 1;
+            isFlipped = false;
+            flipButton.textContent = "Umdrehen";
+            displayCard();
+        }
+    }
+
+    function nextCard() {
+        if (currentCardIndex < cards.length - 1) {
+            currentCardIndex += 1;
+            isFlipped = false;
+            flipButton.textContent = "Umdrehen";
+            displayCard();
+        } else if (cards.length) {
+            showSummary();
+        }
+    }
+
+    function shuffleCards() {
+        for (let index = cards.length - 1; index > 0; index -= 1) {
+            const swapIndex = Math.floor(Math.random() * (index + 1));
+            [cards[index], cards[swapIndex]] = [cards[swapIndex], cards[index]];
+        }
+        currentCardIndex = 0;
+        isFlipped = false;
+        flipButton.textContent = "Umdrehen";
+        displayCard();
+    }
+
+    document.getElementById("previous-card")?.addEventListener("click", previousCard);
+    document.getElementById("next-card")?.addEventListener("click", nextCard);
+    document.getElementById("flip-button")?.addEventListener("click", flipCard);
+    document.getElementById("shuffle-cards")?.addEventListener("click", shuffleCards);
+    document.querySelectorAll("[data-known]").forEach((button) => {
+        button.addEventListener("click", () => markCard(button.getAttribute("data-known") === "true"));
+    });
+    document.querySelectorAll("[data-favorite-id]").forEach((button) => {
+        button.addEventListener("click", (event) => {
+            event.preventDefault();
+            event.stopPropagation();
+            syncFavorite(Number(button.getAttribute("data-favorite-id")));
+        });
+    });
+    document.querySelectorAll("[data-jump-index]").forEach((button) => {
+        button.addEventListener("click", () => {
+            currentCardIndex = Number(button.getAttribute("data-jump-index"));
+            isFlipped = false;
+            flipButton.textContent = "Umdrehen";
+            displayCard();
+        });
+    });
+    favoriteToggle?.addEventListener("click", () => {
+        if (cards[currentCardIndex]) {
+            syncFavorite(cards[currentCardIndex].id);
+        }
+    });
+
+    document.addEventListener("keydown", (event) => {
+        if (!cards.length) {
+            return;
+        }
+        if (event.key === "ArrowRight") {
+            nextCard();
+        }
+        if (event.key === "ArrowLeft") {
+            previousCard();
+        }
+        if (event.key === " " && cards[currentCardIndex] && !cards[currentCardIndex].has_mc) {
+            event.preventDefault();
+            flipCard();
+        }
+    });
+
+    if (cards.length) {
+        displayCard();
+    }
+</script>
+{% endblock %}
