@@ -13,7 +13,7 @@ GREEN='\033[0;32m'
 YELLOW='\033[1;33m'
 NC='\033[0m' # No Color
 
-PROJECT_DIR="/var/www/lernplattform"
+PROJECT_DIR="/var/www/lernplattform/lernplattformne"
 VENV_DIR="${PROJECT_DIR}/.venv"
 
 log_info() {

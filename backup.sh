@@ -8,7 +8,7 @@
 set -euo pipefail
 
 # Configuration
-PROJECT_DIR="/var/www/lernplattform"
+PROJECT_DIR="/var/www/lernplattform/lernplattformne"
 BACKUP_DIR="/var/backups/lernplattform"
 RETENTION_DAYS=14
 LOG_FILE="/var/log/lernplattform_backup.log"
@@ -38,10 +38,30 @@ mkdir -p "$(dirname "${LOG_FILE}")"
 
 log_info "=== Backup started at ${TIMESTAMP} ==="
 
-# Load environment variables from .env
-set -a
-source "${PROJECT_DIR}/.env"
-set +a
+# Load only required DB variables from .env without sourcing shell syntax.
+# This avoids failures when other vars (e.g. SECRET_KEY) contain shell-special chars.
+get_env_var() {
+    local key="$1"
+    local raw
+    raw=$(grep -m1 "^${key}=" "${PROJECT_DIR}/.env" | cut -d'=' -f2- || true)
+    raw="${raw%\"}"
+    raw="${raw#\"}"
+    raw="${raw%\'}"
+    raw="${raw#\'}"
+    printf '%s' "${raw}"
+}
+
+DB_HOST="$(get_env_var DB_HOST)"
+DB_USER="$(get_env_var DB_USER)"
+DB_NAME="$(get_env_var DB_NAME)"
+DB_PASSWORD="$(get_env_var DB_PASSWORD)"
+
+if [ -z "${DB_HOST}" ] || [ -z "${DB_USER}" ] || [ -z "${DB_NAME}" ] || [ -z "${DB_PASSWORD}" ]; then
+    log_error "Missing DB_* values in ${PROJECT_DIR}/.env"
+    exit 1
+fi
+
+export PGPASSWORD="${DB_PASSWORD}"
 
 # Define backup file names
 DB_BACKUP="${BACKUP_DIR}/db_${TIMESTAMP}.sql.gz"
@@ -55,6 +75,7 @@ else
     log_error "✗ Database backup failed!"
     exit 1
 fi
+unset PGPASSWORD
 
 # Backup media directory
 log_info "Backing up media files..."
@@ -71,7 +92,7 @@ fi
 
 # Cleanup old backups (keep last RETENTION_DAYS days)
 log_info "Cleaning up backups older than ${RETENTION_DAYS} days..."
-find "${BACKUP_DIR}" -type f -name "*.sql.gz" -o -name "*.tar.gz" | while read file; do
+find "${BACKUP_DIR}" -type f \( -name "*.sql.gz" -o -name "*.tar.gz" \) | while read file; do
     if [ "$(find "${file}" -mtime +${RETENTION_DAYS})" ]; then
         log_warn "Removing old backup: $(basename "${file}")"
         rm -f "${file}"

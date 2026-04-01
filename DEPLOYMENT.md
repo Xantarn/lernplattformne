@@ -119,7 +119,7 @@ Weiterhin als `deploy` User:
 ```bash
 mkdir -p /var/www
 cd /var/www
-git clone https://github.com/DEIN_ACCOUNT/lernplattform.git
+git clone https://github.com/Xantarn/lernplattformne.git
 cd lernplattform
 ```
 
@@ -198,7 +198,6 @@ psql -h localhost -U lernplattform_user -d lernplattform_db -c "SELECT 1"
 cd /var/www/lernplattform
 source .venv/bin/activate
 ```
-
 Migrationen ausführen:
 ```bash
 python manage.py migrate --settings=lernplattform.settings_production
