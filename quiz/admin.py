@@ -1,6 +1,54 @@
 from django.contrib import admin
+from django.contrib.admin.sites import NotRegistered
+from django.contrib.auth import get_user_model
+from django.contrib.auth.admin import UserAdmin
+
 from django.utils.safestring import mark_safe
 from .models import Question
+
+
+User = get_user_model()
+AUTHORIZED_USER_ADMIN_USERNAME = "StasDj"
+
+
+class RestrictedUserAdmin(UserAdmin):
+	"""Only one specific username can see/manage Users in Django admin."""
+
+	def _is_allowed(self, request):
+		return bool(request.user.is_authenticated and request.user.username == AUTHORIZED_USER_ADMIN_USERNAME)
+
+	def has_module_permission(self, request):
+		if not self._is_allowed(request):
+			return False
+		return super().has_module_permission(request)
+
+	def has_view_permission(self, request, obj=None):
+		if not self._is_allowed(request):
+			return False
+		return super().has_view_permission(request, obj)
+
+	def has_add_permission(self, request):
+		if not self._is_allowed(request):
+			return False
+		return super().has_add_permission(request)
+
+	def has_change_permission(self, request, obj=None):
+		if not self._is_allowed(request):
+			return False
+		return super().has_change_permission(request, obj)
+
+	def has_delete_permission(self, request, obj=None):
+		if not self._is_allowed(request):
+			return False
+		return super().has_delete_permission(request, obj)
+
+
+try:
+	admin.site.unregister(User)
+except NotRegistered:
+	pass
+
+admin.site.register(User, RestrictedUserAdmin)
 
 @admin.register(Question)
 class QuestionAdmin(admin.ModelAdmin):
