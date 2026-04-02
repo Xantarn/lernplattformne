@@ -150,6 +150,10 @@ CKEDITOR_5_CONFIGS = {
         'height': '650px',
         'language': 'de',
         'table': {
+            'defaultHeadings': {
+                'rows': 0,
+                'columns': 0,
+            },
             'contentToolbar': [
                 'tableColumn', 'tableRow', 'mergeTableCells',
                 'tableProperties', 'tableCellProperties'
@@ -172,6 +176,7 @@ CKEDITOR_5_CONFIGS = {
                     'borderColor': '#cbd5e1',
                     'borderWidth': '1px',
                     'backgroundColor': '#ffffff',
+                    'horizontalAlignment': 'left',
                 },
             },
         },

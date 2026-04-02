@@ -177,11 +177,13 @@
     background: #ffffff;
     color: #0f172a;
     vertical-align: top;
+    text-align: left;
+    font-weight: 400;
 }
 
 .ck-content table th {
     background: #f8fafc;
-    font-weight: 700;
+    font-weight: 600;
 }
 
 .ck-content .topic-panel,
