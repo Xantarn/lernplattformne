@@ -123,6 +123,19 @@ STATICFILES_DIRS = [BASE_DIR / 'static']
 MEDIA_URL = '/media/'
 MEDIA_ROOT = BASE_DIR / 'media'
 
+CKEDITOR_TABLE_COLOR_PALETTE = [
+    {'color': '#ffffff', 'label': 'Weiss', 'hasBorder': True},
+    {'color': '#f8fafc', 'label': 'Nebel'},
+    {'color': '#e2e8f0', 'label': 'Hellgrau'},
+    {'color': '#cbd5e1', 'label': 'Silber'},
+    {'color': '#94a3b8', 'label': 'Schiefer'},
+    {'color': '#1d4ed8', 'label': 'Blau'},
+    {'color': '#0f766e', 'label': 'Teal'},
+    {'color': '#16a34a', 'label': 'Gruen'},
+    {'color': '#ea580c', 'label': 'Orange'},
+    {'color': '#dc2626', 'label': 'Rot'},
+]
+
 CKEDITOR_5_CONFIGS = {
     'default': {
         'toolbar': [
@@ -138,6 +151,32 @@ CKEDITOR_5_CONFIGS = {
         ],
         'height': '650px',
         'language': 'de',
+        'table': {
+            'contentToolbar': [
+                'tableColumn', 'tableRow', 'mergeTableCells',
+                'tableProperties', 'tableCellProperties'
+            ],
+            'tableProperties': {
+                'borderColors': CKEDITOR_TABLE_COLOR_PALETTE,
+                'backgroundColors': CKEDITOR_TABLE_COLOR_PALETTE,
+                'defaultProperties': {
+                    'borderStyle': 'solid',
+                    'borderColor': '#94a3b8',
+                    'borderWidth': '1px',
+                    'backgroundColor': '#ffffff',
+                },
+            },
+            'tableCellProperties': {
+                'borderColors': CKEDITOR_TABLE_COLOR_PALETTE,
+                'backgroundColors': CKEDITOR_TABLE_COLOR_PALETTE,
+                'defaultProperties': {
+                    'borderStyle': 'solid',
+                    'borderColor': '#cbd5e1',
+                    'borderWidth': '1px',
+                    'backgroundColor': '#ffffff',
+                },
+            },
+        },
         'htmlSupport': {
             'allow': [
                 {

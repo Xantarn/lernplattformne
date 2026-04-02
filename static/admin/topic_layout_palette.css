@@ -153,6 +153,37 @@
     white-space: pre-wrap;
 }
 
+.ck-content figure.table,
+.ck-content .table {
+    margin: 1.25rem 0;
+    border-radius: 0.9rem;
+    background: #ffffff;
+    box-shadow: 0 16px 30px -28px rgba(15, 23, 42, 0.28);
+    overflow: hidden;
+}
+
+.ck-content figure.table table,
+.ck-content .table table,
+.ck-content table {
+    width: 100%;
+    border-collapse: collapse;
+    background: #ffffff;
+    color: #0f172a;
+}
+
+.ck-content table th,
+.ck-content table td {
+    border: 1px solid #cbd5e1;
+    background: #ffffff;
+    color: #0f172a;
+    vertical-align: top;
+}
+
+.ck-content table th {
+    background: #f8fafc;
+    font-weight: 700;
+}
+
 .ck-content .topic-panel,
 .topic-panel {
     margin: 1.5rem 0;
