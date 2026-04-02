@@ -340,7 +340,18 @@
         editor.model.change(function (writer) {
           editor.editing.view.focus();
           var selection = editor.model.document.selection;
-          writer.insertText(spacingText, selection.getFirstPosition());
+          var firstPosition = selection.getFirstPosition();
+
+          if (!firstPosition) {
+            return;
+          }
+
+          // Table selections can be non-collapsed; collapse before inserting spacing.
+          if (!selection.isCollapsed) {
+            writer.setSelection(firstPosition);
+          }
+
+          editor.model.insertContent(writer.createText(spacingText), editor.model.document.selection);
         });
         return;
       } catch (err) {
